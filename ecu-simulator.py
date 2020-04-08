@@ -14,16 +14,28 @@ def service1(bus, msg):
           data=[0x06, 0x41, 0x00, 0xBF, 0xDF, 0xB9, 0x91],
           is_extended_id=False)
         bus.send(msg)
+    elif msg.data[2] == 0x0B:
+        print(">> Intake manifold absolute pressure")
+        msg = can.Message(arbitration_id=0x7e8,
+          data=[0x04, 0x41, 0x0B, randint(10, 40)],
+          is_extended_id=False)
+        bus.send(msg)
     elif msg.data[2] == 0x0C:
         print(">> RPM")
         msg = can.Message(arbitration_id=0x7e8,
-          data=[0x04, 0x41, 0x0C, 0x12, 0x13],
+          data=[0x04, 0x41, 0x0C, randint(18, 70), randint(0, 255)],
           is_extended_id=False)
         bus.send(msg)
     elif msg.data[2] == 0x0D:
         print(">> Speed")
         msg = can.Message(arbitration_id=0x7e8,
           data=[0x03, 0x41, 0x0D, randint(40, 60)],
+          is_extended_id=False)
+        bus.send(msg)
+    elif msg.data[2] == 0x0F:
+        print(">> Intake air temperature")
+        msg = can.Message(arbitration_id=0x7e8,
+          data=[0x03, 0x41, 0x0F, randint(60, 64)],
           is_extended_id=False)
         bus.send(msg)
     elif msg.data[2] == 0x10:
@@ -41,7 +53,19 @@ def service1(bus, msg):
     elif msg.data[2] == 0x05:
         print(">> Engine coolant temperature")
         msg = can.Message(arbitration_id=0x7e8,
-          data=[0x03, 0x41, 0x05, 0x82],
+          data=[0x03, 0x41, 0x05, randint(88 + 40, 95 + 40)],
+          is_extended_id=False)
+        bus.send(msg)
+    elif msg.data[2] == 0x11:
+        print(">> Throttle position")
+        msg = can.Message(arbitration_id=0x7e8,
+          data=[0x03, 0x41, 0x11, randint(20, 60)],
+          is_extended_id=False)
+        bus.send(msg)
+    elif msg.data[2] == 0x33:
+        print(">> Absolute Barometric Pressure")
+        msg = can.Message(arbitration_id=0x7e8,
+          data=[0x03, 0x41, 0x33, randint(20, 60)],
           is_extended_id=False)
         bus.send(msg)
     else:
