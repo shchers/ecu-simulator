@@ -14,6 +14,18 @@ def service1(bus, msg):
           data=[0x06, 0x41, 0x00, 0xBF, 0xDF, 0xB9, 0x91],
           is_extended_id=False)
         bus.send(msg)
+    elif msg.data[2] == 0x04:
+        print(">> Calculated engine load")
+        msg = can.Message(arbitration_id=0x7e8,
+          data=[0x03, 0x41, 0x04, 0x20],
+          is_extended_id=False)
+        bus.send(msg)
+    elif msg.data[2] == 0x05:
+        print(">> Engine coolant temperature")
+        msg = can.Message(arbitration_id=0x7e8,
+          data=[0x03, 0x41, 0x05, randint(88 + 40, 95 + 40)],
+          is_extended_id=False)
+        bus.send(msg)
     elif msg.data[2] == 0x0B:
         print(">> Intake manifold absolute pressure")
         msg = can.Message(arbitration_id=0x7e8,
@@ -42,18 +54,6 @@ def service1(bus, msg):
         print(">> MAF air flow rate")
         msg = can.Message(arbitration_id=0x7e8,
           data=[0x04, 0x41, 0x10, 0x00, 0xFA],
-          is_extended_id=False)
-        bus.send(msg)
-    elif msg.data[2] == 0x04:
-        print(">> Calculated engine load")
-        msg = can.Message(arbitration_id=0x7e8,
-          data=[0x03, 0x41, 0x04, 0x20],
-          is_extended_id=False)
-        bus.send(msg)
-    elif msg.data[2] == 0x05:
-        print(">> Engine coolant temperature")
-        msg = can.Message(arbitration_id=0x7e8,
-          data=[0x03, 0x41, 0x05, randint(88 + 40, 95 + 40)],
           is_extended_id=False)
         bus.send(msg)
     elif msg.data[2] == 0x11:
