@@ -48,3 +48,11 @@ cd ecu-simulator
 ```
 puthon3 ecu-simulator.py
 ```
+
+# UI
+
+  * Install additional packages, mandatory for UI
+```
+sudo apt install python3-tk
+```
+
