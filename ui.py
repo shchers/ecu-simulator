@@ -2,7 +2,6 @@
 
 import tkinter as tk
 from tkinter import filedialog
-#import tkinter.ttk as ttk
 import glob
 import os
 from datetime import datetime
@@ -23,19 +22,7 @@ class Application(tk.Frame):
 		self.rpm_var = tk.IntVar()
 		self.rpm_var_auto = tk.BooleanVar()
 
-		#self.create_widgets()
 		self.create_controls()
-
-	def create_widgets(self):
-		self.hi_there = tk.Button(self)
-		self.hi_there["text"] = "Hello World\n(click me)"
-		self.hi_there["command"] = self.say_hi
-		self.hi_there.grid(row=row_id, column=0)
-		self.hi_there.pack(side="top")
-
-		self.quit = tk.Button(self, text="QUIT", fg="red",
-							  command=self.master.destroy)
-		self.quit.pack(side="bottom")
 
 	def get_can_devices(self):
 		# XXX: not really good to limit the list only to can
@@ -226,17 +213,8 @@ class Application(tk.Frame):
 			self.sc_rpm['state'] = "disabled"
 		pass
 
-	def decrease(self):
-		value = int(self.lbl_speed_val["text"])
-		self.lbl_speed_val["text"] = f"{value - 1}"
-
-	def say_hi(self):
-		print("hi there, everyone!")
-
 if __name__ == "__main__":
 	window = tk.Tk()
-	# width x height + x_offset + y_offset
-	window.geometry("600x400+30+30")
 	window.title("ECU Simulator")
 	app = Application(master=window)
 	app.mainloop()
