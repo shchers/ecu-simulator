@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import tkinter as tk
+from tkinter import filedialog
 #import tkinter.ttk as ttk
 import glob
 import os
@@ -161,11 +162,25 @@ class Application(tk.Frame):
 		buttons_frame.grid(row=row_id, column=0, columnspan=6, sticky=tk.E+tk.S)
 
 		# TODO: implement
-		btn_savelog = tk.Button(buttons_frame, text="Save log", command=self.master.destroy)
+		btn_savelog = tk.Button(buttons_frame, text="Save log", command=self.save_log)
 		btn_savelog.grid(row=row_id, column=0, padx=(10, 5), pady=(10, 10))
 
 		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
 		btn_quit.grid(row=row_id, column=1, padx=(5, 10), pady=(10, 10))
+
+	def save_log(self):
+		files = [
+			('Logs', '*.log'),
+			('All Files', "*.*"),
+			('Text files', '*.txt')]
+		file_handler = filedialog.asksaveasfile(title = "Save log", defaultextension=".log", filetypes=files)
+		if file_handler is None:
+			# Looks like "Cancel" button is pressed
+			return
+
+		print(file_handler)
+		file_handler.write(str(self.logbox.get(1.0, tk.END)))
+		file_handler.close()
 
 	def on_sc_speed(self, val):
 		# TODO: apply changes
