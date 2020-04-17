@@ -5,6 +5,7 @@ from tkinter import filedialog
 #import tkinter.ttk as ttk
 import glob
 import os
+from datetime import datetime
 
 class Application(tk.Frame):
 	def __init__(self, master=None):
@@ -150,7 +151,9 @@ class Application(tk.Frame):
 
 		self.logbox = tk.Text(log_frame, background="black", foreground="medium spring green", font="Mono 10",
 			yscrollcommand=scrollbar.set)
-		self.logbox.insert(tk.END, "Select interface and press 'Connect' button.")
+		self.logbox.configure(state='normal')
+		self.logbox.insert(tk.END, "Select interface and press 'Connect' button.\n")
+		self.logbox.configure(state='disabled')
 		self.logbox.grid(row=0, column=0, sticky=tk.W+tk.E+tk.N+tk.S)
 
 		scrollbar.config(command=self.logbox.yview)
@@ -168,6 +171,14 @@ class Application(tk.Frame):
 		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
 		btn_quit.grid(row=row_id, column=1, padx=(5, 10), pady=(10, 10))
 
+	def add_log(self, message):
+		self.logbox.configure(state='normal')
+		# Add timestamp to message
+		mpt = '{:%Y.%m.%d-%H:%M:%S.%f}: {:s}\n'.format(datetime.utcnow(), message)
+		self.logbox.insert(tk.END, mpt)
+		self.logbox.configure(state='disabled')
+		self.logbox.see(tk.END)
+
 	def save_log(self):
 		files = [
 			('Logs', '*.log'),
@@ -184,7 +195,7 @@ class Application(tk.Frame):
 
 	def on_sc_speed(self, val):
 		# TODO: apply changes
-		pass
+		self.add_log('Speed = {:s}'.format(val))
 
 	def on_cb_speed_auto(self):
 		if self.speed_var_auto.get() != True:
@@ -202,7 +213,7 @@ class Application(tk.Frame):
 
 	def on_sc_rpm(self, val):
 		# TODO: apply changes
-		pass
+		self.add_log('RPM = {:s}'.format(val))
 
 	def on_cb_rpm_auto(self):
 		if self.rpm_var_auto.get() != True:
