@@ -137,16 +137,35 @@ class Application(tk.Frame):
 		# New row
 		row_id += 1
 
-		self.logbox = tk.Text(frame, background="black", foreground="green", font="Mono 10")
-		self.logbox.insert(tk.END, "Select interface and press connect.")
-		self.logbox.grid(row=row_id, column=0, columnspan=6, padx=(10, 10), pady=(10, 10), sticky=tk.W+tk.E+tk.N+tk.S)
 		tk.Grid.rowconfigure(frame, row_id, weight=1)
+
+		log_frame = tk.Frame(frame)
+		log_frame.grid(row=row_id, column=0, columnspan=6, padx=(10, 10), pady=(10, 10), sticky=tk.W+tk.E+tk.N+tk.S)
+		log_frame.columnconfigure(0, weight=1)
+		log_frame.rowconfigure(0, weight=1)
+
+		scrollbar = tk.Scrollbar(log_frame)
+		scrollbar.grid(row=0, column=1, sticky=tk.E+tk.N+tk.S)
+
+		self.logbox = tk.Text(log_frame, background="black", foreground="medium spring green", font="Mono 10",
+			yscrollcommand=scrollbar.set)
+		self.logbox.insert(tk.END, "Select interface and press 'Connect' button.")
+		self.logbox.grid(row=0, column=0, sticky=tk.W+tk.E+tk.N+tk.S)
+
+		scrollbar.config(command=self.logbox.yview)
 
 		# New row
 		row_id += 1
 
-		self.quit = tk.Button(frame, text="Quit", command=self.master.destroy)
-		self.quit.grid(row=row_id, column=0, columnspan=6, padx=(10, 10), pady=(10, 10), sticky=tk.E+tk.S)
+		buttons_frame = tk.Frame(frame)
+		buttons_frame.grid(row=row_id, column=0, columnspan=6, sticky=tk.E+tk.S)
+
+		# TODO: implement
+		btn_savelog = tk.Button(buttons_frame, text="Save log", command=self.master.destroy)
+		btn_savelog.grid(row=row_id, column=0, padx=(10, 5), pady=(10, 10))
+
+		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
+		btn_quit.grid(row=row_id, column=1, padx=(5, 10), pady=(10, 10))
 
 	def on_sc_speed(self, val):
 		# TODO: apply changes
