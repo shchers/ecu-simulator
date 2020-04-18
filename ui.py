@@ -151,12 +151,14 @@ class Application(tk.Frame):
 		buttons_frame = tk.Frame(frame)
 		buttons_frame.grid(row=row_id, column=0, columnspan=6, sticky=tk.E+tk.S)
 
-		# TODO: implement
+		btn_clearlog = tk.Button(buttons_frame, text="Clear log", command=self.clear_log)
+		btn_clearlog.grid(row=row_id, column=0, padx=(10, 5), pady=(10, 10))
+
 		btn_savelog = tk.Button(buttons_frame, text="Save log", command=self.save_log)
-		btn_savelog.grid(row=row_id, column=0, padx=(10, 5), pady=(10, 10))
+		btn_savelog.grid(row=row_id, column=1, padx=(10, 5), pady=(10, 10))
 
 		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
-		btn_quit.grid(row=row_id, column=1, padx=(5, 10), pady=(10, 10))
+		btn_quit.grid(row=row_id, column=2, padx=(5, 10), pady=(10, 10))
 
 	def add_log(self, message):
 		self.logbox.configure(state='normal')
@@ -165,6 +167,11 @@ class Application(tk.Frame):
 		self.logbox.insert(tk.END, mpt)
 		self.logbox.configure(state='disabled')
 		self.logbox.see(tk.END)
+
+	def clear_log(self):
+		self.logbox.configure(state='normal')
+		self.logbox.delete(1.0, tk.END)
+		self.logbox.configure(state='disabled')
 
 	def save_log(self):
 		files = [
