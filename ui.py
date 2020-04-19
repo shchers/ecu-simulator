@@ -4,7 +4,15 @@ import tkinter as tk
 from tkinter import filedialog
 import glob
 import os
+import getopt
+import sys
+from random import randint
 from datetime import datetime
+import threading
+import logging as log
+
+import can
+from can.bus import BusState
 
 class Application(tk.Frame):
 	def __init__(self, master=None):
@@ -13,6 +21,11 @@ class Application(tk.Frame):
 		self.master.minsize(width=800, height=600)
 		tk.Grid.rowconfigure(master, 0, weight=1)
 		tk.Grid.columnconfigure(master, 0, weight=1)
+
+		# CAN bus
+		self.event = threading.Event()
+		self.bus = None
+		self.can_is_started = False
 
 		# Ceate variables
 		self.can_device_var = tk.StringVar()
@@ -58,13 +71,13 @@ class Application(tk.Frame):
 		devices = self.get_can_devices()
 		if len(devices) > 0:
 			self.can_device_var.set(devices[0])
-		can_options = tk.OptionMenu(can_frame, self.can_device_var, *devices)
-		can_options.grid(row=0, column=0, pady=(5, 10), sticky=tk.W+tk.E)
+		self.can_options = tk.OptionMenu(can_frame, self.can_device_var, *devices)
+		self.can_options.grid(row=0, column=0, pady=(5, 10), sticky=tk.W+tk.E)
 
-		self.connect = tk.Button(can_frame, text="Connect")
+		self.connect = tk.Button(can_frame, text="Connect", command=self.can_connect)
 		self.connect.grid(row=1, column=0, sticky=tk.W+tk.E)
 
-		self.disconnect = tk.Button(can_frame, text="Disconnect")
+		self.disconnect = tk.Button(can_frame, text="Disconnect", state="disabled", command=self.can_disconnect)
 		self.disconnect.grid(row=2, column=0, sticky=tk.W+tk.E)
 
 		gearbox_frame = tk.LabelFrame(frame, text="Gearbox")
@@ -160,6 +173,37 @@ class Application(tk.Frame):
 		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
 		btn_quit.grid(row=row_id, column=2, padx=(5, 10), pady=(10, 10))
 
+	def can_disconnect(self):
+		self.can_is_started = False
+		self.bus.shutdown()
+		self.h_receiver.join(timeout=90)
+		if self.h_receiver.is_alive():
+			self.add_log("Error: CAN bus thread is not stopped!")
+
+		self.can_options['state'] = 'normal'
+		self.connect['state'] = 'normal'
+		self.disconnect['state'] = 'disabled'
+
+		self.event.clear()
+		self.add_log('Bus {:s} is disconnected'.format(self.can_device_var.get()))
+
+	def can_connect(self):
+		self.bus = can.interface.Bus(bustype='socketcan', channel=self.can_device_var.get())
+		if self.bus is None:
+			self.add_log('Bus {:s} cannot be connected'.format(self.can_device_var.get()))
+			return
+
+		self.h_receiver = threading.Thread(target=self.receive_all)
+		self.h_receiver.start()
+
+		self.can_is_started = True
+		self.disconnect['state'] = 'normal'
+		self.connect['state'] = 'disabled'
+		self.can_options['state'] = 'disabled'
+
+		self.event.set()
+		self.add_log('Bus {:s} is connected'.format(self.can_device_var.get()))
+
 	def add_log(self, message):
 		self.logbox.configure(state='normal')
 		# Add timestamp to message
@@ -220,7 +264,111 @@ class Application(tk.Frame):
 			self.sc_rpm['state'] = "disabled"
 		pass
 
+	def service1(self, msg):
+		if msg.data[2] == 0x00:
+			log.debug(">> Caps")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x06, 0x41, 0x00, 0xBF, 0xDF, 0xB9, 0x91],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x04:
+			log.debug(">> Calculated engine load")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x03, 0x41, 0x04, 0x20],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x05:
+			log.debug(">> Engine coolant temperature")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x03, 0x41, 0x05, randint(88 + 40, 95 + 40)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x0B:
+			log.debug(">> Intake manifold absolute pressure")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x04, 0x41, 0x0B, randint(10, 40)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x0C:
+			log.debug(">> RPM")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x04, 0x41, 0x0C, randint(18, 70), randint(0, 255)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x0D:
+			log.debug(">> Speed")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x03, 0x41, 0x0D, randint(40, 60)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x0F:
+			log.debug(">> Intake air temperature")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x03, 0x41, 0x0F, randint(60, 64)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x10:
+			log.debug(">> MAF air flow rate")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x04, 0x41, 0x10, 0x00, 0xFA],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x11:
+			log.debug(">> Throttle position")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x03, 0x41, 0x11, randint(20, 60)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		elif msg.data[2] == 0x33:
+			log.debug(">> Absolute Barometric Pressure")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x03, 0x41, 0x33, randint(20, 60)],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		else:
+			self.add_log('Service 1, unknown PID=0x{:02x}'.format(msg.data[2]))
+
+	def receive_all(self):
+		self.event.wait()
+
+		while self.can_is_started:
+			msg = self.bus.recv(1)
+			# Just skip 'bad' messages
+			if msg is None:
+				continue
+
+			if msg.arbitration_id == 0x7df and msg.data[1] == 0x01:
+				self.service1(msg)
+			else:
+				self.add_log('Unknown Service {:d} or service code 0x{:02x}'.format(msg.arbitration_id, msg.data[1]))
+
 if __name__ == "__main__":
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "l:v", ["loglevel="])
+	except getopt.GetoptError as err:
+		# print help information and exit:
+		print(err)  # will print something like "option -a not recognized"
+		usage()
+		sys.exit(2)
+
+	loglevel = "INFO"
+
+	for o, a in opts:
+		if o == "-v":
+			loglevel = "DEBUG"
+		elif o in ("-l", "--loglevel"):
+			loglevel = a
+		elif o in ("-h", "--help"):
+			usage()
+			sys.exit()
+		else:
+			assert False, "unhandled option"
+
+	numeric_level = getattr(log, loglevel.upper(), None)
+	if not isinstance(numeric_level, int):
+		raise ValueError('Invalid log level: %s' % loglevel)
+	log.basicConfig(level=numeric_level)
+
 	window = tk.Tk()
 	window.title("ECU Simulator")
 	app = Application(master=window)
