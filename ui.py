@@ -32,8 +32,12 @@ class Application(tk.Frame):
 		self.gearbox_var = tk.IntVar()
 		self.speed_var = tk.IntVar()
 		self.speed_var_auto = tk.BooleanVar()
+		self.speed_var_min = tk.IntVar()
+		self.speed_var_max = tk.IntVar()
 		self.rpm_var = tk.IntVar()
 		self.rpm_var_auto = tk.BooleanVar()
+		self.rpm_var_min = tk.IntVar()
+		self.rpm_var_max = tk.IntVar()
 
 		self.create_controls()
 
@@ -92,14 +96,14 @@ class Application(tk.Frame):
 				value=val)
 			rb_gearbox.grid(row=val, column=0, sticky=tk.W)
 
-		# New row
+		# New row - Speed entry
 		row_id += 1
 
 		self.lbl_speed = tk.Label(frame, text="Speed, km/h")
 		self.lbl_speed.grid(row=row_id, column=0, padx=(10, 10), sticky=tk.W)
 
 		self.sc_speed = tk.Scale(frame, from_=0, to=255, orient=tk.HORIZONTAL,
-			command=self.on_sc_speed)
+			variable=self.speed_var)
 		self.sc_speed.grid(row=row_id, column=1, padx=(5, 5), sticky=tk.W+tk.E)
 
 		self.cb_speed_auto = tk.Checkbutton(frame, text="Auto mode",
@@ -107,21 +111,21 @@ class Application(tk.Frame):
 		self.cb_speed_auto.grid(row=row_id, column=3)
 
 		self.sc_speed_min = tk.Scale(frame, from_=0, to=254, orient=tk.HORIZONTAL, label="Min",
-			state="disabled", command=self.on_sc_speed)
+			state="disabled", variable=self.speed_var_min, command=self.on_sc_speed)
 		self.sc_speed_min.grid(row=row_id, column=4, padx=(5, 5), sticky=tk.W+tk.E)
 
 		self.sc_speed_max = tk.Scale(frame, from_=1, to=255, orient=tk.HORIZONTAL, label="Max",
-			state="disabled", command=self.on_sc_speed)
+			state="disabled", variable=self.speed_var_max, command=self.on_sc_speed)
 		self.sc_speed_max.grid(row=row_id, column=5, padx=(5, 10), sticky=tk.W+tk.E)
 
-		# New row
+		# New row - RPM entry
 		row_id += 1
 
 		self.lbl_rpm = tk.Label(frame, text="RPM, km/h")
 		self.lbl_rpm.grid(row=row_id, column=0, padx=(10, 10), sticky=tk.W)
 
 		self.sc_rpm = tk.Scale(frame, from_=0, to=16384, orient=tk.HORIZONTAL,
-			command=self.on_sc_rpm)
+			variable=self.rpm_var)
 		self.sc_rpm.grid(row=row_id, column=1, padx=(5, 5), sticky=tk.W+tk.E)
 
 		self.cb_rpm_auto = tk.Checkbutton(frame, text="Auto mode",
@@ -129,11 +133,11 @@ class Application(tk.Frame):
 		self.cb_rpm_auto.grid(row=row_id, column=3)
 
 		self.sc_rpm_min = tk.Scale(frame, from_=0, to=16383, orient=tk.HORIZONTAL, label="Min",
-			state="disabled", command=self.on_sc_rpm)
+			state="disabled", variable=self.rpm_var_min, command=self.on_sc_rpm)
 		self.sc_rpm_min.grid(row=row_id, column=4, padx=(5, 5), sticky=tk.W+tk.E)
 
 		self.sc_rpm_max = tk.Scale(frame, from_=1, to=16384, orient=tk.HORIZONTAL, label="Max",
-			state="disabled", command=self.on_sc_rpm)
+			state="disabled", variable=self.rpm_var_max, command=self.on_sc_rpm)
 		self.sc_rpm_max.grid(row=row_id, column=5, padx=(5, 10), sticky=tk.W+tk.E)
 
 		# New row
@@ -232,8 +236,8 @@ class Application(tk.Frame):
 		file_handler.close()
 
 	def on_sc_speed(self, val):
-		# TODO: apply changes
-		self.add_log('Speed = {:s}'.format(val))
+		if self.speed_var_min.get() > self.speed_var_max.get():
+			self.speed_var_max.set(self.speed_var_min.get() + 1)
 
 	def on_cb_speed_auto(self):
 		if self.speed_var_auto.get() != True:
@@ -250,8 +254,8 @@ class Application(tk.Frame):
 		print(self.gearbox_var.get())
 
 	def on_sc_rpm(self, val):
-		# TODO: apply changes
-		self.add_log('RPM = {:s}'.format(val))
+		if self.rpm_var_min.get() > self.rpm_var_max.get():
+			self.rpm_var_max.set(self.rpm_var_min.get() + 1)
 
 	def on_cb_rpm_auto(self):
 		if self.rpm_var_auto.get() != True:
@@ -291,14 +295,30 @@ class Application(tk.Frame):
 			self.bus.send(msg)
 		elif msg.data[2] == 0x0C:
 			log.debug(">> RPM")
+
+			if self.rpm_var_auto.get():
+				val = randint(self.rpm_var_min.get(), self.rpm_var_max.get())
+			else:
+				val = self.rpm_var.get()
+
+			val *= 4
+			valA = int(val / 256)
+			valB = int(val - valA*256)
+
 			msg = can.Message(arbitration_id=0x7e8,
-			  data=[0x04, 0x41, 0x0C, randint(18, 70), randint(0, 255)],
+			  data=[0x04, 0x41, 0x0C, valA, valB],
 			  is_extended_id=False)
 			self.bus.send(msg)
 		elif msg.data[2] == 0x0D:
 			log.debug(">> Speed")
+
+			if self.speed_var_auto.get():
+				val = randint(self.speed_var_min.get(), self.speed_var_max.get())
+			else:
+				val = self.speed_var.get()
+
 			msg = can.Message(arbitration_id=0x7e8,
-			  data=[0x03, 0x41, 0x0D, randint(40, 60)],
+			  data=[0x03, 0x41, 0x0D, val],
 			  is_extended_id=False)
 			self.bus.send(msg)
 		elif msg.data[2] == 0x0F:
