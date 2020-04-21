@@ -362,10 +362,14 @@ class Application(tk.Frame):
 			if msg is None:
 				continue
 
-			if msg.arbitration_id == 0x7df and msg.data[1] == 0x01:
+			if msg.arbitration_id != 0x7df:
+				self.add_log('Unknown Id 0x{:03x}'.format(msg.arbitration_id))
+				continue
+
+			if msg.data[1] == 0x01:
 				self.service1(msg)
 			else:
-				self.add_log('Unknown Service {:d} or service code 0x{:02x}'.format(msg.arbitration_id, msg.data[1]))
+				self.add_log('Service {:d} is not supported'.format(msg.data[1]))
 
 if __name__ == "__main__":
 	try:
