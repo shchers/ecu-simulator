@@ -19,6 +19,7 @@ class Application(tk.Frame):
 		super().__init__(master)
 		self.master = master
 		self.master.minsize(width=800, height=600)
+		master.protocol("WM_DELETE_WINDOW", self.close_app)
 		tk.Grid.rowconfigure(master, 0, weight=1)
 		tk.Grid.columnconfigure(master, 0, weight=1)
 
@@ -39,6 +40,12 @@ class Application(tk.Frame):
 		self.rpm_var_max = tk.IntVar()
 
 		self.create_controls()
+
+	def close_app(self):
+		if self.can_is_started:
+			self.can_disconnect()
+
+		self.master.destroy()
 
 	def get_can_devices(self):
 		# XXX: not really good to limit the list only to can
@@ -159,7 +166,7 @@ class Application(tk.Frame):
 		btn_savelog = tk.Button(buttons_frame, text="Save log", command=self.save_log)
 		btn_savelog.grid(row=row_id, column=1, padx=(10, 5), pady=(10, 10))
 
-		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
+		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.close_app)
 		btn_quit.grid(row=row_id, column=2, padx=(5, 10), pady=(10, 10))
 
 	def refresh_list(self):
