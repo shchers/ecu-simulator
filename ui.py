@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import glob
 import os
 import getopt
@@ -75,8 +75,14 @@ class Application(tk.Frame):
 		devices = self.get_can_devices()
 		if len(devices) > 0:
 			self.can_device_var.set(devices[0])
+		else:
+			devices.append('')
+
 		self.can_options = tk.OptionMenu(can_frame, self.can_device_var, *devices)
 		self.can_options.grid(row=0, column=0, pady=(5, 10), sticky=tk.W+tk.E)
+
+		btn_refresh = tk.Button(can_frame, text="R", command=self.refresh_list)
+		btn_refresh.grid(row=0, column=1, pady=(5, 10), sticky=tk.E)
 
 		self.connect = tk.Button(can_frame, text="Connect", command=self.can_connect)
 		self.connect.grid(row=1, column=0, sticky=tk.W+tk.E)
@@ -177,6 +183,25 @@ class Application(tk.Frame):
 		btn_quit = tk.Button(buttons_frame, text="Quit", command=self.master.destroy)
 		btn_quit.grid(row=row_id, column=2, padx=(5, 10), pady=(10, 10))
 
+	def refresh_list(self):
+		# Get list of CAN devices
+		devices = self.get_can_devices()
+
+		# Reset menu
+		menu = self.can_options['menu']
+		menu.delete(0, tk.END)
+		self.can_device_var.set('')
+
+		# Load list of devices to menu
+		for device in devices:
+			menu.add_command(label=device,
+							 command=lambda value=device:
+							 self.om_variable.set(value))
+
+		# Set the first device in the list as a default
+		if len(devices) > 0:
+			self.can_device_var.set(devices[0])
+
 	def can_disconnect(self):
 		self.can_is_started = False
 		self.bus.shutdown()
@@ -192,6 +217,10 @@ class Application(tk.Frame):
 		self.add_log('Bus {:s} is disconnected'.format(self.can_device_var.get()))
 
 	def can_connect(self):
+		if self.can_device_var.get() is '':
+			messagebox.showwarning(message="CAN interface is not available or selected")
+			return
+
 		self.bus = can.interface.Bus(bustype='socketcan', channel=self.can_device_var.get())
 		if self.bus is None:
 			self.add_log('Bus {:s} cannot be connected'.format(self.can_device_var.get()))
