@@ -29,7 +29,6 @@ class Application(tk.Frame):
 
 		# Ceate variables
 		self.can_device_var = tk.StringVar()
-		self.gearbox_var = tk.IntVar()
 		self.speed_var = tk.IntVar()
 		self.speed_var_auto = tk.BooleanVar()
 		self.speed_var_min = tk.IntVar()
@@ -50,14 +49,6 @@ class Application(tk.Frame):
 		return devices
 
 	def create_controls(self):
-		# Gearbox positions
-		gearbox_list = {
-			"Parking" : "0",
-			"Revers" : "1",
-			"Neutral" : "2",
-			"Drive" : "3"
-		}
-
 		frame=tk.Frame(self.master)
 		frame.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
 
@@ -89,18 +80,6 @@ class Application(tk.Frame):
 
 		self.disconnect = tk.Button(can_frame, text="Disconnect", state="disabled", command=self.can_disconnect)
 		self.disconnect.grid(row=2, column=0, sticky=tk.W+tk.E)
-
-		gearbox_frame = tk.LabelFrame(frame, text="Gearbox")
-		gearbox_frame.grid(row=row_id, column=1, padx=(5, 5), sticky=tk.W+tk.W+tk.N+tk.S)
-
-		for (gear, val) in gearbox_list.items():
-			rb_gearbox = tk.Radiobutton(gearbox_frame,
-				text=gear,
-				padx = 5,
-				variable=self.gearbox_var,
-				command=self.on_rb_gearbox,
-				value=val)
-			rb_gearbox.grid(row=val, column=0, sticky=tk.W)
 
 		# New row - Speed entry
 		row_id += 1
@@ -278,9 +257,6 @@ class Application(tk.Frame):
 			self.sc_speed_max['state'] = "normal"
 			self.sc_speed['state'] = "disabled"
 		pass
-
-	def on_rb_gearbox(self):
-		print(self.gearbox_var.get())
 
 	def on_sc_rpm(self, val):
 		if self.rpm_var_min.get() > self.rpm_var_max.get():
