@@ -353,6 +353,32 @@ class Application(tk.Frame):
 		else:
 			self.add_log('Service 1, unknown PID=0x{:02x}'.format(msg.data[2]))
 
+	def service9(self, msg):
+		if msg.data[2] == 0x02:
+			log.debug(">> VIN code")
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x10, 0x14, 0x49, 0x02, 0x01, 0x33, 0x46, 0x41],
+			  is_extended_id=False)
+			self.bus.send(msg)
+			#
+			# XXX: Need to be designed and implemented correct handling for "continue" request:
+			# 7E0   [8]  30 00 00 00 00 00 00 00
+			#
+			# Right now we just sending all VIN code, i.e. without hand-shaking - that is not good
+			#
+			# Also, here hardcoded VIN of some unknown Ford and it need to be replaced with editable entry
+			#
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x21, 0x44, 0x50, 0x34, 0x46, 0x4A, 0x32, 0x42],
+			  is_extended_id=False)
+			self.bus.send(msg)
+			msg = can.Message(arbitration_id=0x7e8,
+			  data=[0x22, 0x4D, 0x31, 0x31, 0x33, 0x39, 0x31, 0x33],
+			  is_extended_id=False)
+			self.bus.send(msg)
+		else:
+			self.add_log('Service 9, unknown PID=0x{:02x}'.format(msg.data[2]))
+
 	def receive_all(self):
 		self.event.wait()
 
@@ -368,6 +394,8 @@ class Application(tk.Frame):
 
 			if msg.data[1] == 0x01:
 				self.service1(msg)
+			elif msg.data[1] == 0x09:
+				self.service9(msg)
 			else:
 				self.add_log('Service {:d} is not supported'.format(msg.data[1]))
 
