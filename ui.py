@@ -203,7 +203,7 @@ class Application(tk.Frame):
 		self.add_log('Bus {:s} is disconnected'.format(self.can_device_var.get()))
 
 	def can_connect(self):
-		if self.can_device_var.get() is '':
+		if self.can_device_var.get() == '':
 			messagebox.showwarning(message="CAN interface is not available or selected")
 			return
 
