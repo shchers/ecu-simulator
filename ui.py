@@ -34,10 +34,10 @@ class Application(tk.Frame):
 		self.speed_var_auto = tk.BooleanVar()
 		self.speed_var_min = tk.IntVar()
 		self.speed_var_max = tk.IntVar()
-		self.rpm_var = tk.IntVar()
+		self.rpm_var = tk.DoubleVar()
 		self.rpm_var_auto = tk.BooleanVar()
-		self.rpm_var_min = tk.IntVar()
-		self.rpm_var_max = tk.IntVar()
+		self.rpm_var_min = tk.DoubleVar()
+		self.rpm_var_max = tk.DoubleVar()
 
 		self.create_controls()
 
@@ -116,20 +116,20 @@ class Application(tk.Frame):
 		self.lbl_rpm = tk.Label(frame, text="RPM, km/h")
 		self.lbl_rpm.grid(row=row_id, column=0, padx=(10, 10), sticky=tk.W)
 
-		self.sc_rpm = tk.Scale(frame, from_=0, to=16384, orient=tk.HORIZONTAL,
-			variable=self.rpm_var)
+		self.sc_rpm = tk.Scale(frame, from_=0, to=16383.75, orient=tk.HORIZONTAL,
+			resolution=0.25, variable=self.rpm_var)
 		self.sc_rpm.grid(row=row_id, column=1, padx=(5, 5), sticky=tk.W+tk.E)
 
 		self.cb_rpm_auto = tk.Checkbutton(frame, text="Auto mode",
 			variable=self.rpm_var_auto, command=self.on_cb_rpm_auto)
 		self.cb_rpm_auto.grid(row=row_id, column=3)
 
-		self.sc_rpm_min = tk.Scale(frame, from_=0, to=16383, orient=tk.HORIZONTAL, label="Min",
-			state="disabled", variable=self.rpm_var_min, command=self.on_sc_rpm)
+		self.sc_rpm_min = tk.Scale(frame, from_=0, to=16383.75, orient=tk.HORIZONTAL, label="Min",
+			resolution=0.25, state="disabled", variable=self.rpm_var_min, command=self.on_sc_rpm)
 		self.sc_rpm_min.grid(row=row_id, column=4, padx=(5, 5), sticky=tk.W+tk.E)
 
-		self.sc_rpm_max = tk.Scale(frame, from_=1, to=16384, orient=tk.HORIZONTAL, label="Max",
-			state="disabled", variable=self.rpm_var_max, command=self.on_sc_rpm)
+		self.sc_rpm_max = tk.Scale(frame, from_=1, to=16383.75, orient=tk.HORIZONTAL, label="Max",
+			resolution=0.25, state="disabled", variable=self.rpm_var_max, command=self.on_sc_rpm)
 		self.sc_rpm_max.grid(row=row_id, column=5, padx=(5, 10), sticky=tk.W+tk.E)
 
 		# New row
